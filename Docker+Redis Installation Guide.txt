@@ -1,0 +1,70 @@
+0. Prerequisites (one-time)
+Install/enable WSL 2 + Docker Desktop
+Verify Docker works bu running these commands
+
+===========================
+docker --version
+docker run --rm hello-world
+===========================
+
+1. Create a persistent data volume
+Redis needs a place to store AOF/RDB files so data survives container restarts.
+
+===============================
+docker volume create redis-data
+===============================
+
+This creates a managed volume named redis-data that we’ll mount at /data (that’s where the official image writes persistence files by default).
+
+
+2. Start Redis (safe, persistent, password-protected)\
+Run a single command to start Redis in the background (detached), persist data, bind to localhost only, and set a password.
+
+=========================================================================
+$REDIS_PASSWORD = "MyS3curePassw0rd!"
+docker run -d --name redis `
+  -p 127.0.0.1:6379:6379 `
+  -v redis-data:/data `
+  --restart unless-stopped `
+  redis:latest redis-server --appendonly yes --requirepass $REDIS_PASSWORD
+==========================================================================
+
+What each flag does
+-p 127.0.0.1:6379:6379 exposes Redis to your PC only (not your LAN) for safety.
+-v redis-data:/data persists data in the Docker volume you created.
+--restart unless-stopped auto-starts Redis when Docker/Windows reboots. 
+Docker Documentation
+redis:latest uses the official Redis image from Docker Hub (you can pin a major version like redis:7 for reproducibility). 
+--appendonly yes enables AOF persistence; --requirepass sets your password. (These are standard Redis config options—you can also put them in a redis.conf file later if you prefer.)
+
+
+3. Confirm it’s running
+
+===========================
+docker ps
+docker logs --tail=50 redis
+===========================
+
+
+Test it works
+Terminal smoke test (with redis-cli inside the container)
+You don’t need to install anything on Windows—use the CLI that ships in the container.
+
+# 1) PING (auth first if you set a password)
+docker exec -it redis redis-cli -a "MyS3curePassw0rd!" ping
+# Expect: PONG
+
+# 2) Basic set/get
+docker exec -it redis redis-cli -a "MyS3curePassw0rd!" set hello world
+docker exec -it redis redis-cli -a "MyS3curePassw0rd!" get hello
+# Expect: "world"
+
+
+Useful maintenance commands
+# Stop / start / remove the container
+docker stop redis
+docker start redis
+docker rm -f redis
+
+# Remove the data volume (this DELETES all Redis data)
+docker volume rm redis-data
