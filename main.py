@@ -3,7 +3,7 @@ import redis
 r = redis.Redis(
     host="localhost",
     port=6379,
-    password="MyS3curePassw0rd!",
+    # password="MyS3curePassw0rd!",
     decode_responses=True,  # return str instead of bytes
     socket_timeout=5,
 )
