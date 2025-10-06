@@ -22,13 +22,7 @@ docker volume create redis-data
 
 ```sh
 # Set your password
-REDIS_PASSWORD="MyS3curePassw0rd!"
-
-docker run -d --name redis `
-  -p 127.0.0.1:6379:6379 `
-  -v redis-data:/data `
-  --restart unless-stopped `
-  redis:latest redis-server --appendonly yes --requirepass $REDIS_PASSWORD
+docker run -d --name redis -p 127.0.0.1:6379:6379  -v redis-data:/data  --restart unless-stopped redis:latest redis-server --appendonly yes
 ```
 
 - `-p 127.0.0.1:6379:6379` exposes Redis to your PC only (not LAN)
